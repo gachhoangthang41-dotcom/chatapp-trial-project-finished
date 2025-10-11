@@ -9,12 +9,15 @@ interface Iparams {
   conversationId: string;
 }
 
-const conversationId = async ({ params }: { params: Iparams }) => {
-  const conversationId = await getConversationById(params.conversationId);
-  const conversation = conversationId;
-  const messages = await getMessages(params.conversationId);
 
-  if (!conversationId) {
+const ConversationPage = async ({ params }: { params: Promise<Iparams> }) => {
+  
+  const resolvedParams = await params;
+
+  const conversation = await getConversationById(resolvedParams.conversationId);
+  const messages = await getMessages(resolvedParams.conversationId);
+
+  if (!conversation) {
     return (
       <div className="lg:pl-80 h-full">
         <div className="h-full flex flex-col">
@@ -27,7 +30,7 @@ const conversationId = async ({ params }: { params: Iparams }) => {
   return (
     <div className="lg:pl-80 h-full">
       <div className="h-full flex flex-col">
-        <Header conversation={conversation} />
+        <Header conversation={conversation} name={null} />
         <Body initialMessages={messages} />
         <Form />
       </div>
@@ -35,5 +38,4 @@ const conversationId = async ({ params }: { params: Iparams }) => {
   );
 };
 
-export default conversationId;
-
+export default ConversationPage;

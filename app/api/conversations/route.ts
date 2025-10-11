@@ -1,89 +1,87 @@
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import prisma from "@/app/libs/prismadb";
 import { NextResponse } from "next/server";
-
-
-
+import prisma from "@/app/libs/prismadb";
+import { pusherServer } from "@/app/libs/pusher";
 
 export async function POST(request: Request) {
   try {
     const currentUser = await getCurrentUser();
     const body = await request.json();
-
-
-
-
-    const { message, image, conversationId } = body;
-
-
-
+    const { userId, isGroup, members, name } = body;
 
     if (!currentUser?.id || !currentUser?.email) {
-      return new Response("Unauthorized", { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    // Group chat
+    if (isGroup) {
+      if (!members || members.length < 2 || !name) {
+        return new NextResponse("Invalid data", { status: 400 });
+      }
 
-
-
-   
-    const newMessage = await prisma.message.create({
-      data: {
-        body: message,
-        image: image,
-        conversation: {
-          connect: {
-            id: conversationId,
+      const newConversation = await prisma.conversation.create({
+        data: {
+          name,
+          isGroup,
+          users: {
+            connect: [
+              ...members.map((member: { value: string }) => ({
+                id: member.value,
+              })),
+              { id: currentUser.id },
+            ],
           },
         },
-        sender: {
-          connect: {
-            id: currentUser.id,
-          },
-        },
-        seen: {
-          connect: {
-            id: currentUser.id,
-          },
-        },
-      },
-      include: {
-        seen: true,
-        sender: true,
-      },
-    });
+        include: { users: true },
+      });
 
+      newConversation.users.forEach((user) => {
+        if (user.email) {
+          pusherServer.trigger(user.email, "conversation:new", newConversation);
+        }
+      });
 
+      return NextResponse.json(newConversation);
+    }
 
+    // One-to-one chat
+    if (!userId) {
+      return new NextResponse("Missing userId", { status: 400 });
+    }
 
-   
-    const updatedConversation = await prisma.conversation.update({
+    const existingConversations = await prisma.conversation.findMany({
       where: {
-        id: conversationId,
-      },
-      data: {
-        lastMessageAt: new Date(),
-        messages: {
-          connect: {
-            id: newMessage.id,
-          },
-        },
-      },
-      include: {
-        users: true,
-        messages: {
-          include: {
-            seen: true,
-          },
-        },
+        OR: [
+          { userIds: { equals: [currentUser.id, userId] } },
+          { userIds: { equals: [userId, currentUser.id] } },
+        ],
       },
     });
-  return NextResponse.json(newMessage);
-   
+
+    const singleConversation = existingConversations[0];
+
+    if (singleConversation) {
+      return NextResponse.json(singleConversation);
+    }
+
+    const newConversation = await prisma.conversation.create({
+      data: {
+        users: {
+          connect: [{ id: currentUser.id }, { id: userId }],
+        },
+      },
+      include: { users: true },
+    });
+
+    newConversation.users.forEach((user) => {
+      if (user.email) {
+        pusherServer.trigger(user.email, "conversation:new", newConversation);
+      }
+    });
+
+    return NextResponse.json(newConversation);
   } catch (error: any) {
-    console.log(error, "lỗi tin nhắn");
-    return new Response("Lỗi tin nhắn", { status: 500 });
+    console.log(error, "ERROR_CONVERSATIONS_POST");
+    return new NextResponse("Internal Error", { status: 500 });
   }
 }
-
-
-

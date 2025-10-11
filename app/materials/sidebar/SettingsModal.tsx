@@ -112,7 +112,7 @@ const SettingsModal:React.FC<SettingsModalProps>=({
                             width="48"
                             height="48"
                             className="rounded-full"
-                            src={image|| currentUser?.image || '/images/placeholder.jpg'}
+                            src={image|| currentUser?.image || '/images/icon.jpg'}
                             alt="Avatar"
                             />
                             <CldUploadButton
