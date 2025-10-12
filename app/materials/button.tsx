@@ -20,7 +20,7 @@ const Button: React.FC<ButtonProps> = ({
   secondary,
   danger,
   disabled,
-  asDiv = false // 👈 mặc định là false
+  asDiv = false 
 }) => {
 
   const classes = clsx(

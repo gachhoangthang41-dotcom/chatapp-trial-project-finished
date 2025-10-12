@@ -7,7 +7,7 @@ import { ClipLoader } from "react-spinners";
 const LoadingModal = () => {
   const [mounted, setMounted] = useState(false);
 
-  // chỉ render sau khi client mount
+  
   useEffect(() => {
     setMounted(true);
   }, []);
