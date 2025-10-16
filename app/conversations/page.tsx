@@ -1,25 +1,25 @@
-"use client";
-import clsx from "clsx";
-import useConversation from "@/app/hooks/useConversation";
+import getFriends from "@/app/actions/getFriends";
+import getFriendRequests from "@/app/actions/getFriendRequests";
 import EmptyState from "@/app/materials/EmptyState";
+import clsx from "clsx";
 
-const Home =() =>{
-    const { isOpen }=useConversation();
+
+const Home = async () => {
+  
+  const friends = await getFriends();
+  const requests = await getFriendRequests();
+
   return (
-
-
-        <div
-       
-        className={clsx(
-            "lg:pl-80 h-full lg:block",
-            isOpen ? 'block' : 'hidden'
-        )}
-        >
-            <EmptyState/>
-        </div>
-    )
+ 
+    <div
+      className={clsx(
+        "hidden lg:block lg:pl-80 h-full"
+      )}
+    >
+      
+      <EmptyState friends={friends} requests={requests} />
+    </div>
+  );
 };
 
-
-
-export default Home;   
+export default Home;

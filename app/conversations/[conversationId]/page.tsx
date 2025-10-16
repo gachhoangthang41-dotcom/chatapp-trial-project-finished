@@ -21,7 +21,7 @@ const ConversationPage = async ({ params }: { params: Promise<Iparams> }) => {
     return (
       <div className="lg:pl-80 h-full">
         <div className="h-full flex flex-col">
-          <EmptyState />
+          <EmptyState friends={[]} requests={[]} />
         </div>
       </div>
     );

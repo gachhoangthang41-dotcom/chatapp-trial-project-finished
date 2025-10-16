@@ -1,29 +1,29 @@
 'use client';
+
 import { useState, useMemo } from "react";
 import { User } from "@prisma/client";
-import UserBox from "./UserBox";
+import UserBox, { FriendStatus } from "./UserBox"; // Import FriendStatus từ UserBox
 import { Search } from "lucide-react";
 
+// Tạo một kiểu mới để User object bao gồm cả friendStatus
+type UserWithStatus = User & {
+  friendStatus: FriendStatus;
+};
+
 interface UserListProps {
-  items: User[];
+  items: UserWithStatus[]; // Sử dụng kiểu mới ở đây
 }
 
-const Userlist: React.FC<UserListProps> = ({ items }) => {
+const UserList: React.FC<UserListProps> = ({ items }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [error, setError] = useState("");
 
+  // Bỏ state `error` vì logic hiển thị "tên không tồn tại" đã đủ
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-
-    if (value.trim() === "") {
-      setError("Không được để trống ô tìm kiếm");
-    } else {
-      setError("");
-    }
+    setSearchTerm(e.target.value);
   };
 
   const filteredUsers = useMemo(() => {
+    // Chỉ tìm kiếm khi có nhập liệu
     if (!searchTerm.trim()) return [];
     return items.filter((user) =>
       user.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -44,7 +44,7 @@ const Userlist: React.FC<UserListProps> = ({ items }) => {
           </div>
 
           {/* Ô tìm kiếm */}
-          <div className="relative mb-2">
+          <div className="relative mb-4">
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
               size={18}
@@ -54,31 +54,29 @@ const Userlist: React.FC<UserListProps> = ({ items }) => {
               placeholder="Search by name..."
               value={searchTerm}
               onChange={handleChange}
-              className={`w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm transition ${
-                error
-                  ? "border-red-500 focus:ring-red-500"
-                  : "border-gray-300 focus:ring-blue-500"
-              }`}
+              className="w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm transition border-gray-300"
             />
           </div>
-
-          {/* Hiển thị lỗi */}
-          {error && (
-            <p className="text-red-500 text-xs mb-3">{error}</p>
-          )}
         </div>
 
         {/* Danh sách user */}
-        {filteredUsers.length > 0 ? (
-          filteredUsers.map((item) => (
-            <UserBox key={item.id} data={item} />
-          ))
-        ) : (
-          !error && <p className="text-gray-500 text-sm">tên không tồn tại</p>
+        {searchTerm.trim() && (
+            filteredUsers.length > 0 ? (
+                filteredUsers.map((item) => (
+                    <UserBox
+                        key={item.id}
+                        data={item}
+                        // **QUAN TRỌNG: Truyền friendStatus xuống UserBox**
+                        initialStatus={item.friendStatus}
+                    />
+                ))
+            ) : (
+                <p className="text-gray-500 text-sm px-2">User not found.</p>
+            )
         )}
       </div>
     </aside>
   );
 };
 
-export default Userlist;
+export default UserList;
