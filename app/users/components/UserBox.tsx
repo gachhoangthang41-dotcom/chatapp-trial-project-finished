@@ -6,28 +6,28 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useEffect } from "react";
 
-// Định nghĩa các trạng thái bạn bè có thể có
+
 export type FriendStatus = "NOT_FRIEND" | "PENDING_SENT" | "FRIEND";
 
 interface UserBoxProps {
   data: User;
-  // Thêm prop này để nhận trạng thái từ component cha
+
   initialStatus: FriendStatus;
 }
 
 const UserBox: React.FC<UserBoxProps> = ({ data, initialStatus }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  // State nội bộ để cập nhật UI ngay lập tức sau khi hành động
+  
   const [currentStatus, setCurrentStatus] = useState(initialStatus);
 
-  // Cập nhật trạng thái nếu prop từ cha thay đổi
+  
   useEffect(() => {
     setCurrentStatus(initialStatus);
   }, [initialStatus]);
 
 
-  // Hàm xử lý khi bắt đầu cuộc trò chuyện
+  
   const handleStartConversation = useCallback(() => {
     setIsLoading(true);
     axios
@@ -38,17 +38,17 @@ const UserBox: React.FC<UserBoxProps> = ({ data, initialStatus }) => {
       .finally(() => setIsLoading(false));
   }, [data, router]);
 
-  // Hàm xử lý khi gửi lời mời kết bạn
+
   const handleAddFriend = useCallback(() => {
     setIsLoading(true);
     axios
       .post("/api/friends/add", { userId: data.id })
       .then(() => {
-        // Cập nhật UI ngay lập tức để hiển thị "Đã gửi"
+       
         setCurrentStatus("PENDING_SENT");
       })
       .catch((error) => {
-        // Bạn có thể thêm thông báo lỗi ở đây (ví dụ: dùng react-hot-toast)
+        
         console.error("Failed to send friend request", error);
       })
       .finally(() => setIsLoading(false));
@@ -73,7 +73,7 @@ const UserBox: React.FC<UserBoxProps> = ({ data, initialStatus }) => {
       >
         <Avatar user={data} />
         <div 
-          onClick={handleStartConversation} // Bạn có thể giữ lại click này hoặc bỏ đi nếu chỉ muốn click vào nút
+          onClick={handleStartConversation} 
           className="min-w-0 flex-1 cursor-pointer"
         >
           <div className="focus:outline-none">
@@ -83,7 +83,7 @@ const UserBox: React.FC<UserBoxProps> = ({ data, initialStatus }) => {
           </div>
         </div>
         
-        {/* === PHẦN LOGIC HIỂN THỊ NÚT === */}
+       
         <div className="flex-shrink-0">
           {currentStatus === "NOT_FRIEND" && (
             <button

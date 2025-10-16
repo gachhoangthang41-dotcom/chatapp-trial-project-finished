@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "messenger clone",
-  description: "messenger clone",
+  title: "crystal messenger",
+  description: "Kết nối với bạn bè và thế giới xung quanh bạn",
 };
 
 export default function RootLayout({

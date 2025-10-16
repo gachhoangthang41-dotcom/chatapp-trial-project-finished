@@ -17,5 +17,6 @@ export const pusherClient = new PusherClient(
       transport:'ajax',
     },
     cluster: "ap1",
+    forceTLS: true,
   }
 );

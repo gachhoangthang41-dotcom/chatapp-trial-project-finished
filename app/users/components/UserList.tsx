@@ -2,28 +2,27 @@
 
 import { useState, useMemo } from "react";
 import { User } from "@prisma/client";
-import UserBox, { FriendStatus } from "./UserBox"; // Import FriendStatus từ UserBox
+import UserBox, { FriendStatus } from "./UserBox"; 
 import { Search } from "lucide-react";
 
-// Tạo một kiểu mới để User object bao gồm cả friendStatus
+
 type UserWithStatus = User & {
   friendStatus: FriendStatus;
 };
 
 interface UserListProps {
-  items: UserWithStatus[]; // Sử dụng kiểu mới ở đây
+  items: UserWithStatus[]; 
 }
 
 const UserList: React.FC<UserListProps> = ({ items }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Bỏ state `error` vì logic hiển thị "tên không tồn tại" đã đủ
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
   const filteredUsers = useMemo(() => {
-    // Chỉ tìm kiếm khi có nhập liệu
+    
     if (!searchTerm.trim()) return [];
     return items.filter((user) =>
       user.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -51,7 +50,7 @@ const UserList: React.FC<UserListProps> = ({ items }) => {
             />
             <input
               type="text"
-              placeholder="Search by name..."
+              placeholder="tìm kiếm người dùng..."
               value={searchTerm}
               onChange={handleChange}
               className="w-full pl-9 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm transition border-gray-300"
@@ -59,14 +58,14 @@ const UserList: React.FC<UserListProps> = ({ items }) => {
           </div>
         </div>
 
-        {/* Danh sách user */}
+       
         {searchTerm.trim() && (
             filteredUsers.length > 0 ? (
                 filteredUsers.map((item) => (
                     <UserBox
                         key={item.id}
                         data={item}
-                        // **QUAN TRỌNG: Truyền friendStatus xuống UserBox**
+                        
                         initialStatus={item.friendStatus}
                     />
                 ))
