@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "crystal messenger",
+  title: "phan mem tin nhan",
   description: "Kết nối với bạn bè và thế giới xung quanh bạn",
 };
 

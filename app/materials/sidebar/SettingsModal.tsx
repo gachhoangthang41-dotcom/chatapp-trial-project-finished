@@ -74,7 +74,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </p>
 
             <div className="mt-10 flex flex-col gap-y-8">
-              
               <Input
                 disabled={isLoading}
                 label="Name"
@@ -84,7 +83,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 register={register}
               />
 
-           
               <div>
                 <label className="block text-sm font-medium leading-6 text-gray-900">
                   Photo
@@ -98,25 +96,39 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     alt="Avatar"
                     unoptimized
                   />
+                 
                   <CldUploadButton
                     options={{ maxFiles: 1 }}
                     onSuccess={handleUpload}
-                    uploadPreset="diomolio"
+                    uploadPreset="diomolio" 
                   >
-                    <Button
-                      disabled={isLoading}
-                      secondary
-                      type="button"
+                  
+                    <div
+                      className="
+                        flex
+                        justify-center
+                        rounded-md
+                        bg-white
+                        px-3
+                        py-2
+                        text-sm
+                        font-semibold
+                        text-gray-900
+                        shadow-sm
+                        ring-1
+                        ring-inset
+                        ring-gray-300
+                        hover:bg-gray-50
+                      "
                     >
                       Thay ảnh
-                    </Button>
+                    </div>
                   </CldUploadButton>
                 </div>
               </div>
             </div>
           </div>
 
-         
           <div className="mt-6 flex items-center justify-end gap-x-6">
             <Button disabled={isLoading} secondary onClick={onClose}>
               Hủy

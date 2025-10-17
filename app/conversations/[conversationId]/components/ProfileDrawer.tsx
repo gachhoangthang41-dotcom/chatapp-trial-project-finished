@@ -11,7 +11,7 @@ import ConfirmModal from "./ConfirmModal";
 import AvatarGroup from "@/app/materials/AvatarGroup";
 import useActiveList from "@/app/hooks/useActiveList";
 
-// BƯỚC 1: IMPORT CÁC THÀNH PHẦN CẦN THIẾT CHO TÌM KIẾM
+
 import axios from "axios";
 import { Search, Loader2 } from "lucide-react";
 import SearchResultItem from "../SearchResultItem";
@@ -31,7 +31,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
   const { members } = useActiveList();
   const isActive = members.indexOf(otherUser?.email!) !== -1;
 
-  // BƯỚC 2: THÊM CÁC STATE ĐỂ QUẢN LÝ VIỆC TÌM KIẾM
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<(Message & { sender: User })[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,28 +46,28 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
 
   const statusText = useMemo(() => {
     if (data.isGroup) {
-      // Sửa lỗi cú pháp template string
+   
       return `${data.users.length} members`;
     }
     return isActive ? 'Active' : 'Offline';
   }, [data, isActive]);
 
-  // BƯỚC 3: SỬ DỤNG useEffect ĐỂ GỌI API TÌM KIẾM
+  
   useEffect(() => {
-    // Sử dụng debounce để tránh gọi API liên tục trên mỗi lần gõ phím
+    
     const timerId = setTimeout(() => {
-      if (searchQuery.trim().length > 1) { // Chỉ tìm kiếm khi có ít nhất 2 ký tự
+      if (searchQuery.trim().length > 1) { 
         setIsLoading(true);
         axios.get(`/api/conversations/${data.id}/search?q=${searchQuery}`)
           .then((response) => setSearchResults(response.data))
           .catch((error) => console.error("Search error:", error))
           .finally(() => setIsLoading(false));
       } else {
-        setSearchResults([]); // Xóa kết quả nếu ô tìm kiếm trống
+        setSearchResults([]);
       }
-    }, 500); // Đợi 500ms sau khi người dùng ngừng gõ
+    }, 500); 
 
-    // Dọn dẹp timeout khi component unmount hoặc searchQuery thay đổi
+    
     return () => clearTimeout(timerId);
   }, [searchQuery, data.id]);
 
@@ -80,7 +80,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
       />
       <Transition show={isOpen} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={onClose}>
-          {/* ... Phần nền mờ và transition không thay đổi ... */}
+     
           <TransitionChild as={Fragment} enter="ease-out duration-500" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-500" leaveFrom="opacity-100" leaveTo="opacity-0" >
             <div className="fixed inset-0 bg-black bg-opacity-40" />
           </TransitionChild>
@@ -93,7 +93,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
                     <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl">
                       <div className="px-4 sm:px-6">
                         <div className="flex items-start justify-end">
-                           {/* ... Nút đóng không thay đổi ... */}
+                         
                            <div className="ml-3 flex h-7 items-center">
                             <button onClick={onClose} type="button" className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">
                                 <span className="sr-only">Close panel</span>
@@ -104,7 +104,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
                       </div>
                       <div className="relative mt-6 flex-1 px-4 sm:px-6">
                         <div className="flex flex-col items-center">
-                          {/* ... Phần thông tin avatar, tên, status không thay đổi ... */}
+              
                           <div className="mb-2">
                             {data.isGroup ? (
                                 <AvatarGroup users={data.users}/>
@@ -115,7 +115,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
                           <div>{title}</div>
                           <div className="text-sm text-gray-500">{statusText}</div>
                           <div className="flex gap-10 my-8">
-                             {/* ... Nút Delete không thay đổi ... */}
+                      
                              <div onClick={() => setConfirmOpen(true)} className="flex flex-col gap-3 items-center cursor-pointer hover:opacity-75">
                                 <div className="w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center">
                                     <IoTrash size={20}/>
@@ -125,9 +125,8 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
                           </div>
                         </div>
 
-                        {/* BƯỚC 4: THÊM GIAO DIỆN TÌM KIẾM VÀ KẾT QUẢ */}
                         <div className="w-full border-t border-gray-200 pt-5">
-                          {/* --- Thanh tìm kiếm --- */}
+                          
                           <dl className="space-y-8 px-4 sm:space-y-6 sm:px-6">
                              <div>
                                 <dt className="text-sm font-medium text-gray-500 sm:w-40 sm:flex-shrink-0">
@@ -146,7 +145,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
                              </div>
                           </dl>
                           
-                          {/* --- Khu vực hiển thị kết quả --- */}
+                         
                           <div className="mt-4 space-y-2 px-4 sm:px-6">
                             {isLoading && (
                                 <div className="flex justify-center items-center py-4">
@@ -164,10 +163,10 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
                           </div>
                         </div>
                         
-                        {/* ... Phần thông tin Joined, Email không thay đổi ... */}
+                       
                         <div className="w-full pb-5 pt-5 sm:px-0 sm:pt-0 mt-4 border-t border-gray-200">
                            <dl className="space-y-8 px-4 sm:space-y-6 sm:px-6">
-                            {/* ... Code hiển thị emails và joined date ... */}
+                           
                             {data.isGroup && (
                                 <div>
                                     <dt className="text-sm font-medium text-gray-500 sm:w-40 sm:flex-shrink-0">Emails</dt>

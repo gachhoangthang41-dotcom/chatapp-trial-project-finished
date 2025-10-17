@@ -39,10 +39,10 @@ const EmptyState: React.FC<EmptyStateProps> = ({ friends, requests }) => {
           <p className="text-gray-500 mt-1">Quản lý bạn bè và lời mời của bạn tại đây.</p>
         </div>
         
-        {/* Component hiển thị lời mời */}
+     
         <PendingRequestsList requests={requests} />
         
-        {/* Component hiển thị danh sách bạn bè */}
+      
         <FriendsList friends={friends} />
       </div>
     </div>

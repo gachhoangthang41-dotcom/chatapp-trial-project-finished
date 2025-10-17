@@ -1,5 +1,3 @@
-// File: app/api/conversations/[conversationId]/search/route.ts
-
 import getCurrentUser from "@/app/actions/getCurrentUser";
 import { NextResponse } from "next/server";
 import prisma from "@/app/libs/prismadb";
@@ -13,34 +11,38 @@ export async function GET(
   { params }: { params: IParams }
 ) {
   try {
+   
+    const { conversationId } = params;
+
     const currentUser = await getCurrentUser();
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q'); // 'q' là query parameter cho search term
+    const query = searchParams.get('q'); 
 
     if (!currentUser?.id || !currentUser?.email) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
     
-    if (!params.conversationId || !query) {
+    
+    if (!conversationId || !query) {
         return new NextResponse('Invalid data', { status: 400 });
     }
 
     const messages = await prisma.message.findMany({
         where: {
-            conversationId: params.conversationId,
-            // Tìm kiếm trong nội dung tin nhắn, không phân biệt hoa thường
+            
+            conversationId: conversationId,
             body: {
-                contains: query,
+                startsWith: query,
                 mode: 'insensitive'
             }
         },
         include: {
-            sender: true // Lấy cả thông tin người gửi
+            sender: true 
         },
         orderBy: {
-            createdAt: 'desc' // Sắp xếp kết quả mới nhất lên đầu
+            createdAt: 'desc' 
         },
-        take: 20 // Giới hạn 20 kết quả để tránh quá tải
+        take: 20 
     });
 
     return NextResponse.json(messages);
