@@ -9,7 +9,8 @@ import toast from "react-hot-toast";
 import Modal from "../Modal";
 import Input from "../input";
 import Image from "next/image";
-import { CldUploadButton } from "next-cloudinary";
+
+import { CldUploadButton, CloudinaryUploadWidgetResults } from "next-cloudinary";
 import Button from "../button";
 
 interface SettingsModalProps {
@@ -41,10 +42,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const image = watch("image");
 
-  const handleUpload = (result: any) => {
-    setValue("image", result?.info?.secure_url, {
-      shouldValidate: true,
-    });
+
+  const handleUpload = (result: CloudinaryUploadWidgetResults) => {
+  
+    if (result.info && typeof result.info === 'object') {
+      setValue("image", result.info.secure_url, {
+        shouldValidate: true,
+      });
+    }
   };
 
   const onSubmit: SubmitHandler<FieldValues> = (data) => {
@@ -96,13 +101,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     alt="Avatar"
                     unoptimized
                   />
-                 
+                  
                   <CldUploadButton
                     options={{ maxFiles: 1 }}
                     onSuccess={handleUpload}
-                    uploadPreset="diomolio" 
+                    uploadPreset="diomolio"
                   >
-                  
+                    
                     <div
                       className="
                         flex

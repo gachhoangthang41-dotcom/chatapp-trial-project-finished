@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
 import clsx from "clsx";
+import { IconType } from "react-icons";
 interface MobileItemProps{
     href:string;
-    icon:any;
+    icon:IconType;
     active?:boolean;
     onClick?:()=>void;
 }

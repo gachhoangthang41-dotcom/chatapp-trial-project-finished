@@ -1,9 +1,10 @@
 'use client';
 import clsx from "clsx";
 import Link from "next/link";
+import { IconType } from "react-icons";
 interface DesktopItemProps{
     label:string;
-    icon:any;
+    icon:IconType;
     href:string;
     onClick?:() =>void;
     active?:boolean;
