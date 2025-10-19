@@ -1,18 +1,17 @@
+
+
 "use client";
 
-import ReactSelect, { MultiValue } from "react-select";
-
+import ReactSelect from "react-select";
 
 export type SelectOption = {
   value: string;
   label: string;
-
-  [key: string]: any; 
+  
 };
 
 interface SelectProps {
   label: string;
-  
   value?: SelectOption[];
   onChange: (value: SelectOption[]) => void;
   options: SelectOption[];
@@ -43,7 +42,7 @@ const Select: React.FC<SelectProps> = ({
         <ReactSelect
           isDisabled={disabled}
           value={value}
-        
+          
           onChange={(selectedOptions) => onChange(selectedOptions as SelectOption[])}
           isMulti
           options={options}
