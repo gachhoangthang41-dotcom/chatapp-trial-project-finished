@@ -39,6 +39,7 @@ model User {
   sentFriendRequests     FriendRequest[] @relation("SentRequests")
   // Lời mời đã nhận
   receivedFriendRequests FriendRequest[] @relation("ReceivedRequests")
+  birthDate       DateTime?
 }
 
 

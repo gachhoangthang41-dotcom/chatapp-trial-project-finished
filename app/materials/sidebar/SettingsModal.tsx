@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import Modal from "../Modal";
-import Input from "../input";
+import Modal from "../Modal";   
+import Input from "../input"; 
 import Image from "next/image";
 import { CldUploadButton, CloudinaryUploadWidgetResults } from "next-cloudinary";
-import Button from "../button";
-import { signOut } from "next-auth/react"; // STEP 1: Import signOut
+import Button from "../button"; 
+import { signOut } from "next-auth/react";
+import { format } from 'date-fns';
 
 interface SettingsModalProps {
   isOpen?: boolean;
@@ -24,7 +25,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   currentUser,
 }) => {
-  const router = useRouter(); // Still needed for refresh if only name/image change
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -41,6 +42,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       currentPassword: '',
       password: '',
       confirmPassword: '',
+      birthDate: currentUser?.birthDate ? format(new Date(currentUser.birthDate), 'yyyy-MM-dd') : '',
     },
   });
 
@@ -57,7 +59,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     setIsLoading(true);
     const isChangingPassword = !!data.password;
 
-    // --- Validation (Unchanged) ---
+    
     if (isChangingPassword) {
       if (!data.currentPassword) {
         toast.error("Vui lòng nhập mật khẩu hiện tại để thay đổi.");
@@ -70,31 +72,32 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         return;
       }
     }
-    // --- End Validation ---
+   
 
-    // --- Prepare Data (Unchanged) ---
-    const dataToSend: FieldValues = { name: data.name, image: data.image };
+  
+    const dataToSend: FieldValues = {
+      name: data.name,
+      image: data.image,
+      birthDate: data.birthDate || null,
+    };
     if (isChangingPassword) {
       dataToSend.currentPassword = data.currentPassword;
       dataToSend.password = data.password;
     }
-    // --- End Prepare Data ---
+  
 
     axios
       .post("/api/settings", dataToSend)
       .then(() => {
         toast.success("Profile updated!");
-        onClose(); 
+        onClose();
 
-        
         if (isChangingPassword) {
-         
           signOut({ callbackUrl: '/' });
         } else {
-          
           router.refresh();
         }
-       
+        
       })
       .catch((error) => {
         if (error?.response?.status === 401) {
@@ -110,7 +113,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* ... Rest of the form JSX remains the same ... */}
         <div className="space-y-12">
           <div className="border-b border-gray-900/10 pb-12">
             <h2 className="text-base font-semibold leading-7 text-gray-900">
@@ -119,53 +121,75 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <p className="mt-1 text-sm leading-6 text-gray-600">
               Chỉnh thông tin. Nhập mật khẩu hiện tại để đổi mật khẩu mới.
             </p>
+
             <div className="mt-10 flex flex-col gap-y-8">
-              <Input
+                <Input
                 disabled={isLoading} label="Name" id="name"
                 errors={errors} required register={register}
               />
+
+             
               <div>
                 <label className="block text-sm font-medium leading-6 text-gray-900">Photo</label>
                 <div className="mt-2 flex items-center gap-x-3">
-                  <Image width={48} height={48} className="rounded-full object-cover" src={image || currentUser?.image || "/images/icon.jpg"} alt="Avatar" unoptimized />
-                  <CldUploadButton options={{ maxFiles: 1 }} onSuccess={handleUpload} uploadPreset="diomolio">
-                    <div className="flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Thay ảnh</div>
+                  <Image
+                      width={48} height={48}
+                      className="rounded-full object-cover"
+                      src={image || currentUser?.image || "/images/icon.jpg"} 
+                      alt="Avatar"
+                      unoptimized 
+                  />
+                  <CldUploadButton
+                      options={{ maxFiles: 1 }}
+                      onSuccess={handleUpload}
+                      uploadPreset="diomolio" 
+                  >
+                      <div className="flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                          Thay ảnh
+                      </div>
                   </CldUploadButton>
                 </div>
               </div>
+              
               <Input
                 disabled={isLoading}
-                label="Mật khẩu hiện tại "
-                id="currentPassword"
-                type="password"
-                errors={errors}
-                register={register}
-                required={!!newPasswordValue}
-              />
-              <Input
-                disabled={isLoading}
-                label="Mật khẩu mới (để trống nếu không đổi)"
-                id="password"
-                type="password"
+                label="Ngày sinh"
+                id="birthDate"
+                type="date"
                 errors={errors}
                 register={register}
                 required={false}
               />
+           
+              <Input
+                disabled={isLoading}
+                label="Mật khẩu hiện tại (cần thiết nếu đổi mật khẩu)"
+                id="currentPassword" type="password" errors={errors}
+                register={register} required={!!newPasswordValue}
+              />
+              <Input
+                disabled={isLoading}
+                label="Mật khẩu mới (để trống nếu không đổi)"
+                id="password" type="password" errors={errors}
+                register={register} required={false}
+              />
               <Input
                 disabled={isLoading}
                 label="Xác nhận mật khẩu mới"
-                id="confirmPassword"
-                type="password"
-                errors={errors}
-                register={register}
-                required={!!newPasswordValue}
+                id="confirmPassword" type="password" errors={errors}
+                register={register} required={!!newPasswordValue}
               />
+     
+
             </div>
           </div>
+
+        
           <div className="mt-6 flex items-center justify-end gap-x-6">
             <Button disabled={isLoading} secondary onClick={onClose}>Hủy</Button>
             <Button disabled={isLoading} type="submit">Lưu</Button>
           </div>
+        
         </div>
       </form>
     </Modal>

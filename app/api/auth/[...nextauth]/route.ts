@@ -7,7 +7,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 
 import prisma from "@/app/libs/prismadb";
-import Email from "next-auth/providers/email";
+
 
 
 export const authOptions: AuthOptions = {

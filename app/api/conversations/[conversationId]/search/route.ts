@@ -11,38 +11,34 @@ export async function GET(
   { params }: { params: IParams }
 ) {
   try {
-   
-    const { conversationId } = params;
-
+    const { conversationId } = params; // Destructure here
     const currentUser = await getCurrentUser();
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q'); 
+    const query = searchParams.get('q');
 
     if (!currentUser?.id || !currentUser?.email) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
-    
-    
+
     if (!conversationId || !query) {
         return new NextResponse('Invalid data', { status: 400 });
     }
 
     const messages = await prisma.message.findMany({
         where: {
-            
             conversationId: conversationId,
             body: {
-                startsWith: query,
-                mode: 'insensitive'
+                startsWith: query, 
+                mode: 'insensitive' 
             }
         },
         include: {
-            sender: true 
+            sender: true
         },
         orderBy: {
-            createdAt: 'desc' 
+            createdAt: 'desc'
         },
-        take: 20 
+        take: 20 // Limit results
     });
 
     return NextResponse.json(messages);
