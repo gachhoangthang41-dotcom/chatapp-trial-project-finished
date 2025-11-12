@@ -4,7 +4,7 @@ import EmptyState from "@/app/materials/EmptyState";
 import Header from "./components/Header";
 import Body from "./components/Body";
 import Form from "./components/Form";
-
+import IncomingCallModal from './components/IncomingCallModal';
 interface Iparams {
   conversationId: string;
 }
@@ -33,6 +33,7 @@ const ConversationPage = async ({ params }: { params: Promise<Iparams> }) => {
         <Header conversation={conversation} name={null} />
         <Body initialMessages={messages} />
         <Form />
+        <IncomingCallModal />
       </div>
     </div>
   );
