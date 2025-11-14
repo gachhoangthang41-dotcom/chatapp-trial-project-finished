@@ -107,7 +107,7 @@ model FriendRequest {
   // Quan hệ với người nhận
   receiver   User          @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
 
-  // Đảm bảo không có 2 lời mời trùng lặp
+  
   @@unique([senderId, receiverId])
 }
 
