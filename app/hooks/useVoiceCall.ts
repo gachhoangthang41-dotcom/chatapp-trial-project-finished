@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { pusherClient } from '@/app/libs/pusher';
 
-export type CallState = 'idle' | 'calling' | 'ringing' | 'connecting' | 'connected' | 'ended' | 'error';
+export type CallState =
+  | 'idle'
+  | 'calling'
+  | 'ringing'
+  | 'connecting'
+  | 'connected'
+  | 'ended'
+  | 'error';
 
 export function useVoiceCall(conversationId: string) {
   // ===== Refs & state =====
@@ -22,6 +29,8 @@ export function useVoiceCall(conversationId: string) {
   const [outputs, setOutputs] = useState<MediaDeviceInfo[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // đã xử lý answer chưa
   const hasRemoteAnswerRef = useRef(false);
 
   // >>> HÀNG ĐỢI ICE KHI CHƯA setRemoteDescription <<<
@@ -40,14 +49,14 @@ export function useVoiceCall(conversationId: string) {
   // ===== Helpers =====
   const startTimer = () => {
     if (timerRef.current) return;
-    timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
+    timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
   };
   const stopTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
   };
   const stopLocalTracks = () => {
-    localStreamRef.current?.getTracks().forEach(t => t.stop());
+    localStreamRef.current?.getTracks().forEach((t) => t.stop());
   };
 
   // ===== RTCPeerConnection =====
@@ -83,7 +92,6 @@ export function useVoiceCall(conversationId: string) {
     };
 
     pc.onconnectionstatechange = () => {
-      // debug
       console.log('[Conn]', pc.connectionState);
       if (pc.connectionState === 'connected') {
         setState('connected');
@@ -97,11 +105,12 @@ export function useVoiceCall(conversationId: string) {
       }
     };
 
-    // Debug chi tiết ICE/Signaling
     pc.oniceconnectionstatechange = () => {
       console.log('[ICE]', pc.iceConnectionState);
       if (pc.iceConnectionState === 'failed') {
-        try { pc.restartIce(); } catch {}
+        try {
+          pc.restartIce();
+        } catch {}
       }
     };
     pc.onicegatheringstatechange = () => {
@@ -119,42 +128,45 @@ export function useVoiceCall(conversationId: string) {
   const refreshDevices = useCallback(async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
-      setMics(devices.filter(d => d.kind === 'audioinput'));
-      setOutputs(devices.filter(d => d.kind === 'audiooutput'));
+      setMics(devices.filter((d) => d.kind === 'audioinput'));
+      setOutputs(devices.filter((d) => d.kind === 'audiooutput'));
     } catch {}
   }, []);
 
-  const acquireMic = useCallback(async (deviceId?: string) => {
-    setError(null);
-    stopLocalTracks();
+  const acquireMic = useCallback(
+    async (deviceId?: string) => {
+      setError(null);
+      stopLocalTracks();
 
-    const constraints: MediaStreamConstraints = {
-      audio: {
-        echoCancellation: { ideal: true },
-        noiseSuppression: { ideal: true },
-        autoGainControl: { ideal: true },
-        deviceId: deviceId ? { exact: deviceId } : undefined,
-      } as MediaTrackConstraints,
-      video: false,
-    };
+      const constraints: MediaStreamConstraints = {
+        audio: {
+          echoCancellation: { ideal: true },
+          noiseSuppression: { ideal: true },
+          autoGainControl: { ideal: true },
+          deviceId: deviceId ? { exact: deviceId } : undefined,
+        } as MediaTrackConstraints,
+        video: false,
+      };
 
-    const pc = ensurePeer();
+      const pc = ensurePeer();
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      localStreamRef.current = stream;
-      const track = stream.getAudioTracks()[0];
-      const sender = pc.getSenders().find(s => s.track?.kind === 'audio');
-      if (sender) sender.replaceTrack(track);
-      else pc.addTrack(track, stream);
-      await refreshDevices();
-      return stream;
-    } catch (e: any) {
-      setError(e?.message || 'Không thể truy cập micro.');
-      setState('error');
-      throw e;
-    }
-  }, [ensurePeer, refreshDevices]);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        localStreamRef.current = stream;
+        const track = stream.getAudioTracks()[0];
+        const sender = pc.getSenders().find((s) => s.track?.kind === 'audio');
+        if (sender) sender.replaceTrack(track);
+        else pc.addTrack(track, stream);
+        await refreshDevices();
+        return stream;
+      } catch (e: any) {
+        setError(e?.message || 'Không thể truy cập micro.');
+        setState('error');
+        throw e;
+      }
+    },
+    [ensurePeer, refreshDevices]
+  );
 
   // ===== HÀNG ĐỢI ICE + FLUSH =====
   const flushPendingCandidates = useCallback(async () => {
@@ -162,15 +174,18 @@ export function useVoiceCall(conversationId: string) {
     if (!pc.remoteDescription) return;
     const list = pendingRemoteCandidatesRef.current.splice(0);
     for (const c of list) {
-      try { await pc.addIceCandidate(new RTCIceCandidate(c)); }
-      catch (e) { console.warn('flush addIceCandidate fail', e); }
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(c));
+      } catch (e) {
+        console.warn('flush addIceCandidate fail', e);
+      }
     }
   }, [ensurePeer]);
 
   // ===== Caller / Callee =====
   const startAsCaller = useCallback(async () => {
     setElapsed(0);
-    setState('connecting'); // được callee accept rồi
+    setState('connecting');
     sessionStorage.setItem(`callState-${conversationId}`, 'connecting');
 
     await acquireMic();
@@ -183,7 +198,12 @@ export function useVoiceCall(conversationId: string) {
     await fetch('/api/call/signal', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ conversationId, type: 'offer', data: offer, socketId }),
+      body: JSON.stringify({
+        conversationId,
+        type: 'offer',
+        data: offer,
+        socketId,
+      }),
     });
   }, [acquireMic, conversationId, ensurePeer]);
 
@@ -196,60 +216,92 @@ export function useVoiceCall(conversationId: string) {
   }, [acquireMic, ensurePeer, conversationId]);
 
   // ===== Signaling handlers =====
-  const handleRemoteOffer = useCallback(async (offer: RTCSessionDescriptionInit) => {
-    const pc = ensurePeer();
-    await pc.setRemoteDescription(new RTCSessionDescription(offer));
-    // flush ICE tới sớm
-    await flushPendingCandidates();
+  const handleRemoteOffer = useCallback(
+    async (offer: RTCSessionDescriptionInit) => {
+      const pc = ensurePeer();
+      console.log('[Offer] setRemoteDescription');
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      await flushPendingCandidates();
 
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
 
-    const socketId = pusherClient.connection?.socket_id;
-    await fetch('/api/call/signal', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ conversationId, type: 'answer', data: answer, socketId }),
-    });
-  }, [conversationId, ensurePeer, flushPendingCandidates]);
+      const socketId = pusherClient.connection?.socket_id;
+      await fetch('/api/call/signal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          type: 'answer',
+          data: answer,
+          socketId,
+        }),
+      });
+    },
+    [conversationId, ensurePeer, flushPendingCandidates]
+  );
 
-  const handleRemoteAnswer = useCallback(async (answer: RTCSessionDescriptionInit) => {
-    const pc = ensurePeer();
-    // chỉ caller set answer; chỉ khi đang have-local-offer
-    if (pc.signalingState !== 'have-local-offer') return;
-    if (hasRemoteAnswerRef.current) return;
+  // *** VÁ Ở ĐÂY ***
+  // Chỉ set answer nếu CHƯA có remoteDescription
+  const handleRemoteAnswer = useCallback(
+    async (answer: RTCSessionDescriptionInit) => {
+      const pc = ensurePeer();
 
-    await pc.setRemoteDescription(new RTCSessionDescription(answer));
-    hasRemoteAnswerRef.current = true;
+      // Nếu đã xử lý answer rồi thì bỏ
+      if (hasRemoteAnswerRef.current) {
+        console.warn('[Answer] already handled → ignore');
+        return;
+      }
 
-    // flush ICE tới sớm
-    await flushPendingCandidates();
-  }, [ensurePeer, flushPendingCandidates]);
+      // Nếu đã có remoteDescription (thường là answer luôn) thì không set lại
+      if (pc.remoteDescription) {
+        console.warn(
+          '[Answer] remoteDescription already set (',
+          pc.remoteDescription.type,
+          ') → ignore'
+        );
+        hasRemoteAnswerRef.current = true;
+        return;
+      }
 
-  const handleRemoteIce = useCallback(async (candidate: RTCIceCandidateInit) => {
-    const pc = ensurePeer();
+      try {
+        console.log('[Answer] setRemoteDescription');
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        hasRemoteAnswerRef.current = true;
+        await flushPendingCandidates();
+      } catch (e) {
+        console.error('[Answer] setRemoteDescription failed:', e);
+      }
+    },
+    [ensurePeer, flushPendingCandidates]
+  );
 
-    // Một số trình duyệt phát "candidate rỗng" để báo kết thúc → bỏ qua
-    if (!candidate || (candidate as any).candidate === '') return;
+  const handleRemoteIce = useCallback(
+    async (candidate: RTCIceCandidateInit) => {
+      const pc = ensurePeer();
 
-    if (!pc.remoteDescription) {
-      // Chưa set remote SDP → xếp hàng
-      pendingRemoteCandidatesRef.current.push(candidate);
-      return;
-    }
-    try {
-      await pc.addIceCandidate(new RTCIceCandidate(candidate));
-    } catch (e) {
-      console.error('Failed to add ICE candidate', e);
-    }
-  }, [ensurePeer]);
+      // Một số trình duyệt phát "candidate rỗng" để báo kết thúc → bỏ qua
+      if (!candidate || (candidate as any).candidate === '') return;
+
+      if (!pc.remoteDescription) {
+        pendingRemoteCandidatesRef.current.push(candidate);
+        return;
+      }
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (e) {
+        console.error('Failed to add ICE candidate', e);
+      }
+    },
+    [ensurePeer]
+  );
 
   // ===== Controls =====
   const toggleMute = () => {
     const s = localStreamRef.current;
     if (!s) return;
-    s.getAudioTracks().forEach(t => (t.enabled = !t.enabled));
-    setMuted(prev => !prev);
+    s.getAudioTracks().forEach((t) => (t.enabled = !t.enabled));
+    setMuted((prev) => !prev);
   };
 
   const switchMicrophone = async (deviceId: string) => {
@@ -273,31 +325,41 @@ export function useVoiceCall(conversationId: string) {
   };
 
   const hangup = () => {
-    pcRef.current?.getSenders().forEach(s => s.track?.stop());
+    pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     pcRef.current?.close();
     pcRef.current = null;
 
     stopLocalTracks();
-    pendingRemoteCandidatesRef.current = []; // dọn hàng đợi ICE
+    pendingRemoteCandidatesRef.current = [];
     stopTimer();
 
     setState('ended');
     sessionStorage.removeItem(`callState-${conversationId}`);
+    hasRemoteAnswerRef.current = false;
   };
 
   useEffect(() => () => stopTimer(), []);
 
   // ===== Public API =====
   return {
-    // state & ui
-    state, error, elapsed, muted, needsPlay,
-    // refs
+    state,
+    error,
+    elapsed,
+    muted,
+    needsPlay,
     remoteAudioRef,
-    // devices
-    mics, outputs, refreshDevices, switchMicrophone, setOutputDevice,
-    // signaling
-    startAsCaller, startAsCallee, handleRemoteOffer, handleRemoteAnswer, handleRemoteIce,
-    // controls
-    toggleMute, resumeRemoteAudio, hangup,
+    mics,
+    outputs,
+    refreshDevices,
+    switchMicrophone,
+    setOutputDevice,
+    startAsCaller,
+    startAsCallee,
+    handleRemoteOffer,
+    handleRemoteAnswer,
+    handleRemoteIce,
+    toggleMute,
+    resumeRemoteAudio,
+    hangup,
   };
 }

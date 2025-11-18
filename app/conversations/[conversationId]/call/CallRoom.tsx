@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { pusherClient } from '@/app/libs/pusher';
 import { conversationChannel } from '@/app/libs/pusherChannels';
@@ -32,7 +32,9 @@ export default function CallRoom() {
   // dùng để tránh điều hướng nhiều lần
   const [exiting, setExiting] = useState(false);
 
-  // Hàm thoát về màn chat sau khi kết thúc
+  // caller đã start offer chưa
+  const startedRef = useRef(false);
+
   const exitToChat = () => {
     if (!conversationId || exiting) return;
     setExiting(true);
@@ -42,22 +44,30 @@ export default function CallRoom() {
   useEffect(() => {
     if (!conversationId) return;
 
-    const ch = pusherClient.subscribe(conversationChannel(conversationId));
+    const chName = conversationChannel(conversationId);
+    const ch = pusherClient.subscribe(chName);
 
     // Cả hai đầu đều nhận ICE
-    const onIce = ({ data }: any) => rtc.handleRemoteIce(data);
+    const onIce = (payload: { data: RTCIceCandidateInit }) => rtc.handleRemoteIce(payload.data);
     ch.bind('webrtc:ice', onIce);
 
-    // --- Bắt tay: callee gửi 'ready', caller chỉ tạo offer khi nhận 'ready'
     if (role === 'caller') {
+      // Caller: chỉ tạo offer 1 lần khi nhận ready
       const onReady = async () => {
+        if (startedRef.current) {
+          console.log('[CallRoom] caller already started, ignore extra ready');
+          return;
+        }
+        startedRef.current = true;
         await rtc.startAsCaller();
       };
       ch.bind('call:ready', onReady);
 
-      const onAnswer = ({ data }: any) => rtc.handleRemoteAnswer(data);
+      const onAnswer = (payload: { data: RTCSessionDescriptionInit }) =>
+        rtc.handleRemoteAnswer(payload.data);
       ch.bind('webrtc:answer', onAnswer);
     } else {
+      // Callee: vào phòng, mở mic, gửi ready; chỉ nghe offer
       (async () => {
         await rtc.startAsCallee();
         const socketId = pusherClient.connection?.socket_id;
@@ -68,18 +78,18 @@ export default function CallRoom() {
         });
       })();
 
-      const onOffer = ({ data }: any) => rtc.handleRemoteOffer(data);
+      const onOffer = (payload: { data: RTCSessionDescriptionInit }) =>
+        rtc.handleRemoteOffer(payload.data);
       ch.bind('webrtc:offer', onOffer);
     }
 
-    // Khi đối phương cúp → thoát về chat
     const onEnded = () => {
       rtc.hangup();
+      startedRef.current = false;
       exitToChat();
     };
     ch.bind('call:ended', onEnded);
 
-    // Đảm bảo giải phóng khi đóng tab/refresh
     const beforeUnload = () => {
       const socketId = pusherClient.connection?.socket_id;
       fetch('/api/call/control', {
@@ -88,6 +98,7 @@ export default function CallRoom() {
         body: JSON.stringify({ conversationId, action: 'ended', socketId }),
       });
       rtc.hangup();
+      startedRef.current = false;
     };
     window.addEventListener('beforeunload', beforeUnload);
 
@@ -95,14 +106,17 @@ export default function CallRoom() {
       ch.unbind('webrtc:ice', onIce);
       ch.unbind('call:ended', onEnded);
       ch.unbind_all();
+      pusherClient.unsubscribe(chName);
       window.removeEventListener('beforeunload', beforeUnload);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, role]);
 
-  // Nếu PC tự chuyển sang 'ended' (mất kết nối, lỗi ICE, v.v.) → cũng thoát
   useEffect(() => {
-    if (rtc.state === 'ended') exitToChat();
+    if (rtc.state === 'ended') {
+      startedRef.current = false;
+      exitToChat();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rtc.state]);
 
@@ -127,28 +141,31 @@ export default function CallRoom() {
 
   return (
     <div className="fixed inset-0 bg-gradient-to-b from-sky-600 to-indigo-700 text-white flex flex-col">
-      {/* âm thanh đối phương */}
       <audio ref={rtc.remoteAudioRef} autoPlay playsInline />
 
-      {/* Header */}
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="font-semibold">Cuộc gọi thoại</div>
-        <button onClick={exitToChat} className="text-white/80 hover:text-white">Đóng</button>
+        <button onClick={exitToChat} className="text-white/80 hover:text-white">
+          Đóng
+        </button>
       </div>
 
-      {/* Thân */}
       <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="w-28 h-28 rounded-full bg-white/20 flex items-center justify-center text-3xl select-none">📞</div>
+        <div className="w-28 h-28 rounded-full bg-white/20 flex items-center justify-center text-3xl select-none">
+          📞
+        </div>
         <div className="mt-4 text-lg">{statusText}</div>
         {rtc.error && <div className="mt-2 text-red-200 text-sm">Lỗi: {rtc.error}</div>}
         {rtc.needsPlay && (
-          <button onClick={rtc.resumeRemoteAudio} className="mt-3 px-3 py-1 rounded bg-white/20 hover:bg-white/30">
+          <button
+            onClick={rtc.resumeRemoteAudio}
+            className="mt-3 px-3 py-1 rounded bg-white/20 hover:bg-white/30"
+          >
             Bật âm thanh
           </button>
         )}
       </div>
 
-      {/* Điều khiển */}
       <div className="p-4 bg-black/20">
         <div className="flex flex-wrap gap-3 items-center justify-center">
           <button onClick={rtc.toggleMute} className="px-4 py-2 rounded bg-white/10 hover:bg-white/20">
@@ -164,8 +181,9 @@ export default function CallRoom() {
                 body: JSON.stringify({ conversationId, action: 'ended', socketId }),
               });
               rtc.hangup();
+              startedRef.current = false;
               sessionStorage.removeItem(`callRole-${conversationId}`);
-              exitToChat(); // <-- quay về màn chat ngay sau khi kết thúc
+              exitToChat();
             }}
             className="px-4 py-2 rounded bg-red-600 hover:bg-red-700"
           >
@@ -180,8 +198,10 @@ export default function CallRoom() {
               onFocus={rtc.refreshDevices}
               defaultValue=""
             >
-              <option value="" disabled>Chọn</option>
-              {rtc.mics.map(d => (
+              <option value="" disabled>
+                Chọn
+              </option>
+              {rtc.mics.map((d) => (
                 <option key={d.deviceId} value={d.deviceId} className="text-black">
                   {d.label || `Mic ${d.deviceId.slice(-4)}`}
                 </option>
@@ -197,8 +217,10 @@ export default function CallRoom() {
                   onFocus={rtc.refreshDevices}
                   defaultValue=""
                 >
-                  <option value="" disabled>Chọn</option>
-                  {rtc.outputs.map(d => (
+                  <option value="" disabled>
+                    Chọn
+                  </option>
+                  {rtc.outputs.map((d) => (
                     <option key={d.deviceId} value={d.deviceId} className="text-black">
                       {d.label || `Loa ${d.deviceId.slice(-4)}`}
                     </option>
