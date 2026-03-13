@@ -121,6 +121,7 @@ export function useVoiceCall(conversationId: string) {
     };
 
     pcRef.current = pc;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return pc;
   }, [conversationId]);
 
@@ -159,8 +160,8 @@ export function useVoiceCall(conversationId: string) {
         else pc.addTrack(track, stream);
         await refreshDevices();
         return stream;
-      } catch (e: any) {
-        setError(e?.message || 'Không thể truy cập micro.');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Không thể truy cập micro.');
         setState('error');
         throw e;
       }
@@ -281,7 +282,7 @@ export function useVoiceCall(conversationId: string) {
       const pc = ensurePeer();
 
       // Một số trình duyệt phát "candidate rỗng" để báo kết thúc → bỏ qua
-      if (!candidate || (candidate as any).candidate === '') return;
+      if (!candidate || (candidate as { candidate?: string }).candidate === '') return;
 
       if (!pc.remoteDescription) {
         pendingRemoteCandidatesRef.current.push(candidate);
@@ -309,7 +310,7 @@ export function useVoiceCall(conversationId: string) {
   };
 
   const setOutputDevice = async (deviceId: string) => {
-    const el = remoteAudioRef.current as any;
+    const el = remoteAudioRef.current as HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> };
     if (el && typeof el.setSinkId === 'function') {
       await el.setSinkId(deviceId).catch(() => {});
     }

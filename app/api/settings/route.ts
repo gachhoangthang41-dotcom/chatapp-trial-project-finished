@@ -58,7 +58,7 @@ export async function POST(
             try {
               
                 dataToUpdate.birthDate = new Date(birthDate);
-            } catch (dateError) {
+            } catch {
                 console.error("Invalid date format received:", birthDate);
                 
             }

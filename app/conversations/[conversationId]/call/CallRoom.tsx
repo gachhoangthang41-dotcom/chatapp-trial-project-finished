@@ -21,7 +21,7 @@ function format(sec: number) {
 export default function CallRoom() {
   const router = useRouter();
   const params = useParams();
-  const conversationId = getParam(params as any, 'conversationId');
+  const conversationId = getParam(params as Record<string, string | string[] | undefined>, 'conversationId');
 
   const search = useSearchParams();
   const roleParam = search?.get('role');
@@ -120,12 +120,6 @@ export default function CallRoom() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rtc.state]);
 
-  if (!conversationId) return <div className="p-4">Đang tải cuộc gọi…</div>;
-
-  const supportsOutputSelect =
-    typeof document !== 'undefined' &&
-    typeof (document.createElement('audio') as any).setSinkId === 'function';
-
   const statusText = useMemo(() => {
     switch (rtc.state) {
       case 'connecting':
@@ -138,6 +132,13 @@ export default function CallRoom() {
         return 'Đang gọi…';
     }
   }, [rtc.state, rtc.elapsed]);
+
+  if (!conversationId) return <div className="p-4">Đang tải cuộc gọi…</div>;
+
+  const supportsOutputSelect =
+    typeof document !== 'undefined' &&
+    typeof (document.createElement('audio') as HTMLAudioElement & { setSinkId?: (id: string) => Promise<void> }).setSinkId === 'function';
+
 
   return (
     <div className="fixed inset-0 bg-gradient-to-b from-sky-600 to-indigo-700 text-white flex flex-col">

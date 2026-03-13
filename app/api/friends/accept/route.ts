@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     
-    const [updatedUser, updatedFriend] = await prisma.$transaction([
+    await prisma.$transaction([
       
       prisma.friendRequest.update({
         where: { id: requestId },

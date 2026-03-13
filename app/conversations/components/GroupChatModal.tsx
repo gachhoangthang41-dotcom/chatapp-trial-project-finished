@@ -9,7 +9,7 @@ import { toast } from 'react-hot-toast';
 
 import Modal from '@/app/materials/Modal';
 import Input from '@/app/materials/input';
-import Select, { SelectOption } from '@/app/materials/Select'; 
+import Select from '@/app/materials/Select'; 
 import Button from '@/app/materials/button';
 
 interface GroupChatModalProps {

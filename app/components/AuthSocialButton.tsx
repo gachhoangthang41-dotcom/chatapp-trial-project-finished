@@ -1,5 +1,5 @@
-import{ IconType }from 'react-icons';
 'use client'
+import{ IconType }from 'react-icons';
 interface AuthSocialButtonProps{
     icon:IconType;
     onClick:()=> void;

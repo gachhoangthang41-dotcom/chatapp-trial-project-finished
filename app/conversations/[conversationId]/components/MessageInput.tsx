@@ -1,6 +1,6 @@
 "use client";
 
-import { UseFormRegister, FieldValues, FieldErrors, Field } from "react-hook-form";
+import { UseFormRegister, FieldValues, FieldErrors } from "react-hook-form";
 
 interface MessageInputProps{
         placeholder?:string;
@@ -15,8 +15,7 @@ const MessageInput:React.FC<MessageInputProps>=({
     id,
     type,   
     required,
-    register,
-    errors
+    register
 })=>{
     return(
         <div className="relative w-full">

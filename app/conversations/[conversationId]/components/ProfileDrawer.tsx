@@ -30,7 +30,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
   const { conversationId } = useConversation(); // Lấy conversationId
   const otherUser = useOtherUser(data);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Thêm isLoading cho việc xóa
+
   const { members } = useActiveList();
 
   // Sửa lỗi TypeScript: Kiểm tra email an toàn
@@ -45,7 +45,6 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
 
   // Thêm useCallback cho logic xóa conversation
   const onDeleteConversation = useCallback(() => {
-    setIsLoading(true);
     axios.delete(`/api/conversations/${conversationId}`)
       .then(() => {
         onClose(); // Đóng drawer
@@ -53,8 +52,7 @@ const ProfileDrawer: React.FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) 
         router.push('/conversations');
         router.refresh();
       })
-      .catch(() => toast.error('Something went wrong!'))
-      .finally(() => setIsLoading(false));
+      .catch(() => toast.error('Something went wrong!'));
   }, [conversationId, router, onClose]);
 
   const joinedDate = useMemo(() => {

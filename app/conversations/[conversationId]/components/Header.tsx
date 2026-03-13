@@ -14,7 +14,6 @@ import {
 import ProfileDrawer from "./ProfileDrawer";
 import AvatarGroup from "@/app/materials/AvatarGroup";
 import useActiveList from "@/app/hooks/useActiveList";
-import { useRouter } from "next/navigation";
 import { pusherClient } from "@/app/libs/pusher";
 import { conversationChannel } from "@/app/libs/pusherChannels";
 import { Ringer } from "@/app/utils/ringer";
@@ -26,7 +25,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ name, conversation }) => {
-  const router = useRouter();
+
   const otherUser = useOtherUser(conversation);
   const { members } = useActiveList();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -35,9 +34,9 @@ const Header: React.FC<HeaderProps> = ({ name, conversation }) => {
 
   // lấy user hiện tại để gắn initiatorId
   const { data: session } = useSession();
-  const initiatorId = (session?.user as any)?.id as string | undefined;
+  const initiatorId = (session?.user as { id?: string })?.id;
 
-  const isActive = members.indexOf(otherUser?.email!) !== -1;
+  const isActive = members.indexOf(otherUser?.email ?? '') !== -1;
 
   const statusText = useMemo(() => {
     if (conversation.isGroup) return `${conversation.users.length} members`;

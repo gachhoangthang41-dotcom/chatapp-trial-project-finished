@@ -1,6 +1,6 @@
 import SideBar from "@/app/materials/sidebar/Sidebar"
 import ConversationList from "./components/ConversationList"
-import { get } from "http"
+
 import getConversations from "@/app/actions/getConversation"
 import getUsers from "../actions/getUsers"
 export default async function Conversations({

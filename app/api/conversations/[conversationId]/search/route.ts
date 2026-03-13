@@ -8,10 +8,10 @@ interface IParams {
 
 export async function GET(
   request: Request,
-  { params }: { params: IParams }
+  context: { params: Promise<IParams> }
 ) {
   try {
-    const { conversationId } = params; // Destructure here
+    const { conversationId } = await context.params;
     const currentUser = await getCurrentUser();
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');

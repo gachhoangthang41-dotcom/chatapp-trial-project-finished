@@ -4,7 +4,7 @@ import axios from "axios";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { HiPhoto, HiPaperAirplane } from "react-icons/hi2";
 import MessageInput from "./MessageInput";
-import { CldUploadButton } from "next-cloudinary";
+import { CldUploadButton, CloudinaryUploadWidgetResults } from "next-cloudinary";
 
 
 const Form = () => {
@@ -30,11 +30,13 @@ const Form = () => {
   };
 
 
-  const handleUpload = (result: any) => {
-    axios.post("/api/messages", {
-      image: result?.info?.secure_url,
-      conversationId,
-    });
+  const handleUpload = (result: CloudinaryUploadWidgetResults) => {
+    if (result.info && typeof result.info === 'object' && 'secure_url' in result.info) {
+      axios.post("/api/messages", {
+        image: result.info.secure_url,
+        conversationId,
+      });
+    }
   };
 
 

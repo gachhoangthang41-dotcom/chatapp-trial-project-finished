@@ -19,7 +19,7 @@ export default function IncomingCallGlobal() {
   const router = useRouter();
 
   // với PrismaAdapter, NextAuth thường có user.id trên session
-  const userId = (session?.user as any)?.id as string | undefined;
+  const userId = (session?.user as { id?: string })?.id;
 
   const [open, setOpen] = useState(false);
   const [fromUser, setFromUser] = useState('Người gọi');

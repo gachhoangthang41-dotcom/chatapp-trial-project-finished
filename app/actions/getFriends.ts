@@ -26,7 +26,7 @@ const getFriends = async () => {
     }
 
     return userWithFriends.friends;
-  } catch (error: any) {
+  } catch (error) {
     // Ghi lại lỗi và trả về mảng rỗng để tránh làm sập ứng dụng
     console.error("GET_FRIENDS_ERROR", error);
     return [];

@@ -34,7 +34,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     setValue,
     watch,
     formState: { errors },
-    reset,
   } = useForm<FieldValues>({
     defaultValues: {
       name: currentUser?.name,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { pusherClient } from '@/app/libs/pusher';
 import { conversationChannel } from '@/app/libs/pusherChannels';
 import { Ringer } from '@/app/utils/ringer';
@@ -14,8 +14,7 @@ function getParam(params: Record<string, string | string[] | undefined> | null, 
 
 export default function IncomingCallModal() {
   const params = useParams();
-  const conversationId = getParam(params as any, 'conversationId');
-  const router = useRouter();
+  const conversationId = getParam(params as Record<string, string | string[] | undefined>, 'conversationId');
 
   const [open, setOpen] = useState(false);
   const [fromUser, setFromUser] = useState<string>('Người gọi');
@@ -25,7 +24,7 @@ export default function IncomingCallModal() {
     if (!conversationId) return;
     const ch = pusherClient.subscribe(conversationChannel(conversationId));
 
-    const onRinging = async ({ fromUser }: any) => {
+    const onRinging = async ({ fromUser }: { fromUser?: string }) => {
       // đang bận -> báo busy
       const callState = sessionStorage.getItem(`callState-${conversationId}`);
       if (callState === 'connecting' || callState === 'connected') {

@@ -17,7 +17,7 @@ function playFile(path: string, loop: boolean) {
 function startTone() {
   if (audioCtx) return;
   try {
-    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     osc = audioCtx.createOscillator();
     gain = audioCtx.createGain();
     osc.type = 'sine';
@@ -46,7 +46,7 @@ export const Ringer = {
     catch { startTone(); }
   },
   stopRingback() {
-    try { ringbackEl?.pause(); ringbackEl && (ringbackEl.currentTime = 0); } catch {}
+    try { ringbackEl?.pause(); if (ringbackEl) ringbackEl.currentTime = 0; } catch {}
     ringbackEl = null;
     stopTone();
   },
@@ -56,7 +56,7 @@ export const Ringer = {
     catch { startTone(); }
   },
   stopRingtone() {
-    try { ringtoneEl?.pause(); ringtoneEl && (ringtoneEl.currentTime = 0); } catch {}
+    try { ringtoneEl?.pause(); if (ringtoneEl) ringtoneEl.currentTime = 0; } catch {}
     ringtoneEl = null;
     stopTone();
   },

@@ -16,7 +16,7 @@ try {
         },
     });
     return conversation;
-}catch (error: any) {
+} catch {
     return null;
 }   
 }

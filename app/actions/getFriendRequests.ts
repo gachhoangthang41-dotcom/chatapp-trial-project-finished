@@ -28,7 +28,7 @@ const getFriendRequests = async () => {
     });
 
     return requests;
-  } catch (error: any) {
+  } catch (error) {
     // Ghi lại lỗi và trả về mảng rỗng
     console.error("GET_FRIEND_REQUESTS_ERROR", error);
     return [];

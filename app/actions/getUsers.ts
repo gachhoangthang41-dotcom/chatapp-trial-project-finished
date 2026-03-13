@@ -56,7 +56,7 @@ const getUsers = async () => {
 
     return usersWithStatus;
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("GET_USERS_ERROR", error);
     return [];
   }
