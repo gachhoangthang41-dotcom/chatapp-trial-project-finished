@@ -20,12 +20,17 @@ function getRequiredEnv(name: string) {
 
 function getBaseUrl() {
     const configuredUrl = process.env.NEXTAUTH_URL?.trim();
+    const vercelUrl = process.env.VERCEL_URL?.trim();
 
     if (!configuredUrl) {
-        if (isProduction) {
-            throw new Error(
-                "[auth] NEXTAUTH_URL is required in production. Example: https://your-app.vercel.app"
+        if (isProduction && vercelUrl) {
+            const inferredUrl = `https://${vercelUrl}`;
+
+            console.warn(
+                `[auth] NEXTAUTH_URL is missing in production. Falling back to VERCEL_URL: ${inferredUrl}`
             );
+
+            return inferredUrl;
         }
 
         return "http://localhost:3000";
@@ -44,8 +49,18 @@ function getBaseUrl() {
             parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1";
 
         if (parsedUrl.protocol !== "https:" || isLocalHost) {
-            throw new Error(
-                `[auth] NEXTAUTH_URL must use your public https domain in production. Current value: ${configuredUrl}`
+            if (vercelUrl) {
+                const inferredUrl = `https://${vercelUrl}`;
+
+                console.warn(
+                    `[auth] NEXTAUTH_URL should use your public https domain in production. Using VERCEL_URL instead: ${inferredUrl}`
+                );
+
+                return inferredUrl;
+            }
+
+            console.warn(
+                `[auth] NEXTAUTH_URL should use your public https domain in production. Current value: ${configuredUrl}`
             );
         }
     }
