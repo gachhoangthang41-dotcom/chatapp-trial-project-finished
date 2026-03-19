@@ -6,6 +6,64 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/app/libs/prismadb";
 
+const isProduction = process.env.NODE_ENV === "production";
+
+function getRequiredEnv(name: string) {
+    const value = process.env[name]?.trim();
+
+    if (!value) {
+        throw new Error(`[auth] Missing required environment variable: ${name}`);
+    }
+
+    return value;
+}
+
+function getBaseUrl() {
+    const configuredUrl = process.env.NEXTAUTH_URL?.trim();
+
+    if (!configuredUrl) {
+        if (isProduction) {
+            throw new Error(
+                "[auth] NEXTAUTH_URL is required in production. Example: https://your-app.vercel.app"
+            );
+        }
+
+        return "http://localhost:3000";
+    }
+
+    let parsedUrl: URL;
+
+    try {
+        parsedUrl = new URL(configuredUrl);
+    } catch {
+        throw new Error(`[auth] NEXTAUTH_URL is invalid: ${configuredUrl}`);
+    }
+
+    if (isProduction) {
+        const isLocalHost =
+            parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1";
+
+        if (parsedUrl.protocol !== "https:" || isLocalHost) {
+            throw new Error(
+                `[auth] NEXTAUTH_URL must use your public https domain in production. Current value: ${configuredUrl}`
+            );
+        }
+    }
+
+    return configuredUrl.replace(/\/$/, "");
+}
+
+const baseUrl = getBaseUrl();
+const googleClientId = getRequiredEnv("GOOGLE_CLIENT_ID");
+const googleClientSecret = getRequiredEnv("GOOGLE_CLIENT_SECRET");
+const nextAuthSecret = getRequiredEnv("NEXTAUTH_SECRET");
+
+if (isProduction) {
+    console.info(
+        `[auth] Google redirect URI must be added in Google Cloud: ${baseUrl}/api/auth/callback/google`
+    );
+}
+
 export const authOptions: AuthOptions = {
     adapter: PrismaAdapter(prisma),
     providers: [
@@ -14,8 +72,8 @@ export const authOptions: AuthOptions = {
             clientSecret: process.env.FACEBOOK_SECRET as string,
         }),
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID as string,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
         }),
         CredentialsProvider({
             name: 'credentials',
@@ -50,5 +108,5 @@ export const authOptions: AuthOptions = {
     session: {
         strategy: "jwt",
     },
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: nextAuthSecret,
 };
