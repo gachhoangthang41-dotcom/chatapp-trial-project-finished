@@ -2,10 +2,15 @@
 
 import useConversation from "@/app/hooks/useConversation";
 import useRoutes from "@/app/hooks/useRoutes";
+import { User } from "@prisma/client";
 import MobileItem from "./MobileItem";
 
-const MobileFooter=() =>{
-    const routes =useRoutes();
+interface MobileFooterProps {
+    currentUser: User | null;
+}
+
+const MobileFooter=({ currentUser }: MobileFooterProps) =>{
+    const routes =useRoutes(currentUser?.role === "ADMIN");
     const{isOpen} =useConversation();
     if(isOpen){
         return null;

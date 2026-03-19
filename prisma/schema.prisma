@@ -14,6 +14,7 @@ model User {
   id               String    @id @default(auto()) @map("_id") @db.ObjectId
   name             String?
   email            String?   @unique
+  role             UserRole? @default(USER)
   emailVerified    DateTime?
   image            String?
   hashedPassword   String?
@@ -82,6 +83,8 @@ model Message {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   body      String?
   image     String?
+  isRecalled Boolean? @default(false)
+  recalledAt DateTime?
   createdAt DateTime @default(now())
 
   seenIds   String[] @db.ObjectId
@@ -115,4 +118,9 @@ enum RequestStatus {
   PENDING
   ACCEPTED
   DECLINED
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }

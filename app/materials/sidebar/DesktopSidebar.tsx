@@ -12,10 +12,8 @@ interface DesktopSidebarProps{
 const DesktopSidebar:React.FC<DesktopSidebarProps> = ({
   currentUser
 }) => {
-  const routes = useRoutes();
+  const routes = useRoutes(currentUser.role === "ADMIN");
   const [isOpen, setIsOpen] = useState(false);
- 
-  console.log({currentUser})
 
   return (
     <>

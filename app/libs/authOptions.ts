@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import FacebookProvider from "next-auth/providers/facebook";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { UserRole } from "@prisma/client";
 import prisma from "@/app/libs/prismadb";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -132,6 +133,34 @@ export const authOptions: AuthOptions = {
                 token.id = user.id;
             }
 
+            const userRole =
+                user &&
+                "role" in user &&
+                (user.role === "USER" || user.role === "ADMIN")
+                    ? (user.role as UserRole)
+                    : undefined;
+
+            if (userRole) {
+                token.role = userRole;
+            }
+
+            if ((!token.role || !token.id) && token.email) {
+                const dbUser = await prisma.user.findUnique({
+                    where: {
+                        email: token.email,
+                    },
+                    select: {
+                        id: true,
+                        role: true,
+                    },
+                });
+
+                if (dbUser) {
+                    token.id = dbUser.id;
+                    token.role = dbUser.role ?? "USER";
+                }
+            }
+
             return token;
         },
         async session({ session, token }) {
@@ -141,6 +170,10 @@ export const authOptions: AuthOptions = {
 
             if (session.user && token.id) {
                 session.user.id = token.id as string;
+            }
+
+            if (session.user) {
+                session.user.role = (token.role as "USER" | "ADMIN") ?? "USER";
             }
 
             return session;

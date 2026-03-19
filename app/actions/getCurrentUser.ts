@@ -1,4 +1,5 @@
 import prisma from "@/app/libs/prismadb";
+import { isAdminEmail } from "@/app/libs/admin";
 import getSession from "./getSession";
 const getCurrentUser=async () =>{
     try{
@@ -13,6 +14,12 @@ const getCurrentUser=async () =>{
      });
      if (!currentUser){
         return null;
+     }
+     if (isAdminEmail(currentUser.email)) {
+        return {
+            ...currentUser,
+            role: "ADMIN" as const,
+        };
      }
      return currentUser;
     } catch {
