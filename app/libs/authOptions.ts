@@ -66,7 +66,6 @@ if (isProduction) {
 
 export const authOptions: AuthOptions = {
     adapter: PrismaAdapter(prisma),
-    trustHost: true,
     providers: [
         FacebookProvider({
             clientId: process.env.FACEBOOK_ID as string,
