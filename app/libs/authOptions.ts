@@ -66,6 +66,7 @@ if (isProduction) {
 
 export const authOptions: AuthOptions = {
     adapter: PrismaAdapter(prisma),
+    trustHost: true,
     providers: [
         FacebookProvider({
             clientId: process.env.FACEBOOK_ID as string,
@@ -105,8 +106,31 @@ export const authOptions: AuthOptions = {
         })
     ],
     debug: process.env.NODE_ENV === 'development',
+    pages: {
+        signIn: "/",
+    },
     session: {
         strategy: "jwt",
+    },
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user?.id) {
+                token.id = user.id;
+            }
+
+            return token;
+        },
+        async session({ session, token }) {
+            if (session.user && token.sub) {
+                session.user.id = token.sub;
+            }
+
+            if (session.user && token.id) {
+                session.user.id = token.id as string;
+            }
+
+            return session;
+        },
     },
     secret: nextAuthSecret,
 };
